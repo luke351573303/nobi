@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel技术论坛 - 结构树演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        /* 左侧结构树区域 */
+        .left-panel {
+            width: 240px;
+            background-color: white;
+            padding: 20px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .tree-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 15px;
+        }
+
+        .tree-node {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .tree-node li {
+            margin: 5px 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tree-node .icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            text-align: center;
+            font-size: 12px;
+            color: white;
+            background-color: #0066cc;
+            border-radius: 2px;
+        }
+
+        .tree-node .expandable::before {
+            content: "+";
+            display: inline-block;
+            width: 16px;
+            margin-right: 8px;
+            color: #0066cc;
+            font-weight: bold;
+        }
+
+        .tree-node .collapsed::before {
+            content: "−";
+        }
+
+        .tree-node .children {
+            display: none;
+            padding-left: 20px;
+        }
+
+        .active-node {
+            color: #0066cc;
+            font-weight: bold;
+        }
+
+        /* 右侧内容区域 */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: white;
+        }
+
+        .list-header {
+            height: 40px;
+            line-height: 40px;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 10px;
+        }
+
+        .content-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .list-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background-color: #f8f8f8;
+        }
+
+        .content-detail {
+            display: none;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .detail-image {
+            max-width: 400px;
+            margin: 20px 0;
+            border: 1px solid #e0e0e0;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧结构树 -->
+    <div class="left-panel">
+        <h3 class="tree-title">Excel技术论坛</h3>
+        <ul class="tree-node" id="tree">
+            <li data-node-id="root" class="expandable">
+                <span class="icon"></span> 全部板块
+                <ul class="children">
+                    <li data-node-id="1" class="expandable">
+                        <span class="icon"></span> Excel基础应用
+                        <ul class="children">
+                            <li data-node-id="101">公式与函数</li>
+                            <li data-node-id="102">数据处理</li>
+                            <li data-node-id="103">图表与图形</li>
+                        </ul>
+                    </li>
+                    <li data-node-id="2" class="expandable">
+                        <span class="icon"></span> Excel进阶技术
+                        <ul class="children">
+                            <li data-node-id="201">VBA编程</li>
+                            <li data-node-id="202">数据透视表</li>
+                            <li data-node-id="203">Power Query</li>
+                        </ul>
+                    </li>
+                    <li data-node-id="3">
+                        <span class="icon"></span> 行业应用案例
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 右侧内容区域 -->
+    <div class="right-panel">
+        <div class="list-header">
+            <span id="current-node">请选择左侧板块</span>
+        </div>
+        <div class="content-list" id="postList"></div>
+        <div class="content-detail" id="contentDetail">
+            <h4 id="detailTitle"></h4>
+            <p id="detailContent"></p>
+            <img src="" alt="示例图片" class="detail-image" id="detailImage">
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据 - 节点对应的帖子列表
+        const postData = {
+            "101": [
+                { id: 1, title: "SUM函数的高级用法", content: "介绍SUM函数的多条件求和技巧...", image: "img/post1.jpg" },
+                { id: 2, title: "VLOOKUP错误处理方法", content: "解决VLOOKUP常见的#N/A错误...", image: "img/post2.jpg" }
+            ],
+            "102": [
+                { id: 3, title: "数据排序与筛选技巧", content: "复杂数据排序的分步演示...", image: "img/post3.jpg" },
+                { id: 4, title: "缺失值填充方法汇总", content: "介绍多种数据填充策略...", image: "img/post4.jpg" }
+            ],
+            // 其他节点数据...
+        };
+
+        // 结构树点击事件
+        document.getElementById('tree').addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.tagName === 'LI' || target.closest('li')) {
+                const li = target.closest('li');
+                const nodeId = li.dataset.nodeId;
+                const children = li.querySelector('.children');
+                
+                // 清除所有节点的激活状态
+                document.querySelectorAll('.tree-node li').forEach(n => n.classList.remove('active-node'));
+                li.classList.add('active-node');
+                
+                // 更新当前节点标题
+                document.getElementById('current-node').textContent = li.textContent.trim();
+                
+                // 处理展开/收缩
+                if (children) {
+                    children.style.display = children.style.display === 'none' ? 'block' : 'none';
+                    li.classList.toggle('collapsed');
+                } else {
+                    // 加载帖子列表
+                    showPostList(nodeId);
+                }
+            }
+        });
+
+        // 显示帖子列表
+        function showPostList(nodeId) {
+            const postList = document.getElementById('postList');
+            postList.innerHTML = '';
+            
+            const posts = postData[nodeId] || [];
+            posts.forEach(post => {
+                const listItem = document.createElement('div');
+                listItem.className = 'list-item';
+                listItem.dataset.postId = post.id;
+                listItem.textContent = post.title;
+                listItem.addEventListener('click', () => showPostDetail(post));
+                postList.appendChild(listItem);
+            });
+        }
+
+        // 显示帖子详情
+        function showPostDetail(post) {
+            const detail = document.getElementById('contentDetail');
+            detail.style.display = 'block';
+            document.getElementById('detailTitle').textContent = post.title;
+            document.getElementById('detailContent').textContent = post.content;
+            document.getElementById('detailImage').src = post.image;
+        }
+
+        // 初始化折叠所有子节点
+        document.querySelectorAll('.children').forEach(children => children.style.display = 'none');
+    </script>
+</body>
+</html>
