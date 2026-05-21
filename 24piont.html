@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24点游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .game-area {
+            margin-bottom: 30px;
+        }
+        
+        .numbers {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .number {
+            width: 60px;
+            height: 60px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .number:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .number.used {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .operations {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .operation {
+            width: 50px;
+            height: 50px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .operation:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .formula-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .formula-input:focus {
+            border-color: #2980b9;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .action-btn {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .submit-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .submit-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .timer {
+            font-size: 20px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .result {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-top: 20px;
+            min-height: 24px;
+            font-weight: bold;
+        }
+        
+        .correct {
+            color: #2ecc71;
+        }
+        
+        .incorrect {
+            color: #e74c3c;
+        }
+        
+        .restart-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .restart-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>24点游戏</h1>
+        
+        <div class="timer" id="timer">剩余时间: 60秒</div>
+        
+        <div class="game-area">
+            <div class="numbers" id="numbers">
+                <!-- 数字将通过JS动态生成 -->
+            </div>
+            
+            <div class="operations">
+                <div class="operation" data-symbol="+">+</div>
+                <div class="operation" data-symbol="-">-</div>
+                <div class="operation" data-symbol="×">×</div>
+                <div class="operation" data-symbol="÷">÷</div>
+                <div class="operation" data-symbol="(" style="background-color: #f39c12;">(</div>
+                <div class="operation" data-symbol=")" style="background-color: #f39c12;">)</div>
+            </div>
+            
+            <input type="text" class="formula-input" id="formula" placeholder="输入你的计算公式，例如 (3+5)×4-8" readonly>
+            
+            <div class="action-buttons">
+                <button class="action-btn" id="clear">清除</button>
+            </div>
+            
+            <button class="submit-btn" id="submit">提交答案</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <button class="restart-btn" id="new-round">再来一题</button>
+    </div>
+
+    <script>
+        // 游戏变量
+        let numbers = [];
+        let usedNumbers = [];
+        let startTime;
+        let timerInterval;
+        
+        // DOM元素
+        const numbersContainer = document.getElementById('numbers');
+        const formulaInput = document.getElementById('formula');
+        const submitButton = document.getElementById('submit');
+        const resultDisplay = document.getElementById('result');
+        const timerDisplay = document.getElementById('timer');
+        const newRoundButton = document.getElementById('new-round');
+        const clearButton = document.getElementById('clear');
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置变量
+            numbers = [];
+            usedNumbers = [];
+            formulaInput.value = '';
+            resultDisplay.textContent = '';
+            formulaInput.readOnly = false;
+            formulaInput.classList.remove('hidden');
+            submitButton.classList.remove('hidden');
+            newRoundButton.classList.remove('hidden');
+            clearButton.classList.remove('hidden');
+            
+            // 生成4个随机数字
+            while (numbers.length < 4) {
+                const num = Math.floor(Math.random() * 9) + 1; // 1-9的整数
+                // 确保数字不重复
+                if (!numbers.includes(num)) {
+                    numbers.push(num);
+                }
+            }
+            
+            // 清空并填充数字容器
+            numbersContainer.innerHTML = '';
+            numbers.forEach(num => {
+                const numberElement = document.createElement('div');
+                numberElement.className = 'number';
+                numberElement.textContent = num;
+                numberElement.dataset.value = num;
+                numberElement.addEventListener('click', () => selectNumber(num));
+                numbersContainer.appendChild(numberElement);
+            });
+            
+            // 重置计时器
+            resetTimer();
+        }
+        
+        // 选择数字
+        function selectNumber(num) {
+            const numberElement = document.querySelector(`.number[data-value="${num}"]:not(.used)`);
+            if (numberElement) {
+                // 检查是否已经选择了所有数字
+                if (usedNumbers.length >= numbers.length) return;
+                
+                // 添加数字到公式
+                if (formulaInput.value === '') {
+                    formulaInput.value = num;
+                } else {
+                    formulaInput.value += num;
+                }
+                
+                // 标记数字为已使用
+                numberElement.classList.add('used');
+                usedNumbers.push(num);
+                
+                // 禁用已使用的数字
+                numberElement.removeEventListener('click', () => selectNumber(num));
+            }
+        }
+        
+        // 操作符点击
+        document.querySelectorAll('.operation').forEach(operation => {
+            operation.addEventListener('click', () => {
+                const symbol = operation.dataset.symbol;
+                // 只有当公式不为空且不是以括号开始或结束时才添加操作符
+                if (symbol === '(') {
+                    if (formulaInput.value === '' || isLastCharOperator()) {
+                        formulaInput.value += symbol;
+                    }
+                } else if (symbol === ')') {
+                    // 不允许在开头添加右括号，也不允许在操作符前添加
+                    if (!isLastCharOperator() && formulaInput.value !== '') {
+                        formulaInput.value += symbol;
+                    }
+                } else {
+                    // 对于其他操作符
+                    if (formulaInput.value && !isLastCharOperator()) {
+                        formulaInput.value += symbol;
+                    } else if (formulaInput.value && !isLastCharOperator() && symbol === '-') {
+                        // 允许在公式中间添加负号
+                        formulaInput.value += symbol;
+                    }
+                }
+            });
+        });
+        
+        // 检查最后一个字符是否是操作符
+        function isLastCharOperator() {
+            const lastChar = formulaInput.value.slice(-1);
+            return ['+', '-', '×', '÷', '('].includes(lastChar);
+        }
+        
+        // 提交答案
+        submitButton.addEventListener('click', () => {
+            const formula = formulaInput.value;
+            if (!formula) {
+                resultDisplay.textContent = '请输入计算公式!';
+                resultDisplay.className = 'result incorrect';
+                return;
+            }
+            
+            // 检查是否使用了所有数字（包括括号中的数字）
+            if (!isAllNumbersUsed(formula)) {
+                resultDisplay.textContent = '请使用所有数字!';
+                resultDisplay.className = 'result incorrect';
+                return;
+            }
+            
+            // 计算结果
+            const result = calculateFormula(formula);
+            
+            if (result === 24) {
+                resultDisplay.textContent = '恭喜你，正确答案!';
+                resultDisplay.className = 'result correct';
+                endGame();
+            } else {
+                resultDisplay.textContent = `错误! 正确答案可能是: ${findSolution(numbers)}`;
+                resultDisplay.className = 'result incorrect';
+                endGame();
+            }
+        });
+        
+        // 检查是否使用了所有数字
+        function isAllNumbersUsed(formula) {
+            // 获取所有数字并排序
+            const formulaNumbers = formula.replace(/[^0-9]/g, '').split('').sort();
+            const gameNumbers = [...numbers].sort();
+            
+            return formulaNumbers.join('') === gameNumbers.join('');
+        }
+        
+        // 使用递归方法尝试找到解决方案
+        function findSolution(nums) {
+            // 复制数组以避免修改原数组
+            nums = [...nums];
+            
+            // 如果只剩一个数，检查是否为24
+            if (nums.length === 1) {
+                return Math.abs(nums[0] - 24) < 0.001 ? nums[0].toString() : null;
+            }
+            
+            // 检查所有可能的数字组合和操作
+            for (let i = 0; i < nums.length; i++) {
+                for (let j = i + 1; j < nums.length; j++) {
+                    // 获取当前两个数
+                    const a = nums[i];
+                    const b = nums[j];
+                    
+                    // 尝试所有四种运算
+                    const operations = [
+                        { symbol: '+', result: a + b },
+                        { symbol: '-', result: a - b },
+                        { symbol: '×', result: a * b },
+                        { symbol: '÷', result: b !== 0 ? a / b : null }
+                    ];
+                    
+                    for (const op of operations) {
+                        if (op.result !== null) {
+                            // 创建新数组，包含当前运算结果和其他数字
+                            const newNums = [...nums];
+                            newNums.splice(j, 1);
+                            newNums.splice(i, 1);
+                            newNums.push(op.result);
+                            
+                            // 递归寻找解决方案
+                            const solution = findSolution(newNums);
+                            
+                            if (solution) {
+                                // 构建表达式
+                                let expr;
+                                if (op.symbol === '÷' || op.symbol === '-') {
+                                    // 如果是除法或减法，需要考虑括号
+                                    expr = `(${a}${op.symbol}${b})`;
+                                } else {
+                                    expr = `${a}${op.symbol}${b}`;
+                                }
+                                
+                                // 检查是否需要添加括号
+                                if (solution.includes(op.symbol)) {
+                                    return `(${expr})${solution}`;
+                                } else {
+                                    return `${expr}${solution.includes('+') || solution.includes('×') ? '+' : ''}${solution}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 如果没有找到解决方案，返回默认答案
+            return `${nums[0]}×${nums[1]}+${nums[2]}×${nums[3]}`;
+        }
+        
+        // 计算公式结果（简化版）
+        function calculateFormula(formula) {
+            try {
+                // 替换中文操作符为英文操作符以便计算
+                let formulaWithEnglishOps = formula.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                // 简单的计算，可能不处理运算符优先级
+                const result = eval(formulaWithEnglishOps);
+                
+                // 处理非整数结果（如48/2=24.0）
+                return Math.abs(result - Math.round(result)) < 0.001 ? Math.round(result) : result;
+            } catch (e) {
+                return NaN;
+            }
+        }
+        
+        // 开始计时器
+        function resetTimer() {
+            clearInterval(timerInterval);
+            const timer = document.getElementById('timer');
+            let timeLeft = 60;
+            timer.textContent = `剩余时间: ${timeLeft}秒`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timer.textContent = `剩余时间: ${timeLeft}秒`;
+                
+                if (timeLeft <= 10) {
+                    timer.style.color = '#e74c3c';
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                    resultDisplay.textContent = `时间到! 正确答案可能是: ${findSolution(numbers)}`;
+                    resultDisplay.className = 'result incorrect';
+                }
+            }, 1000);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            // 禁用所有元素
+            document.querySelectorAll('.number').forEach(el => {
+                el.classList.add('used');
+                el.removeEventListener('click', () => {});
+            });
+            
+            document.querySelectorAll('.operation').forEach(el => {
+                el.removeEventListener('click', () => {});
+            });
+            
+            // 禁用提交按钮和清除按钮
+            submitButton.classList.add('hidden');
+            clearButton.classList.add('hidden');
+            
+            // 禁用输入框
+            formulaInput.classList.add('hidden');
+            
+            clearInterval(timerInterval);
+        }
+        
+        // 清除输入
+        clearButton.addEventListener('click', () => {
+            formulaInput.value = '';
+            // 重新启用所有数字
+            document.querySelectorAll('.number').forEach(el => {
+                el.classList.remove('used');
+                el.addEventListener('click', () => selectNumber(parseInt(el.dataset.value)));
+            });
+            usedNumbers = [];
+        });
+        
+        // 再来一题按钮
+        newRoundButton.addEventListener('click', initGame);
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>

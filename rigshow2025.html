@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>石油钻机</title>
+    <!-- 微信分享优化标签 -->
+    <meta property="og:title" content="石油钻机3D交互展示" />
+    <meta property="og:description" content="探索石油钻机的各个组成部分" />
+    <meta property="og:image" content="http://www.xiongmengwan.com/picbox/3Dlogo2025.jpg" />
+    <meta property="og:url" content="https://www.xiongmengwan.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="石油钻机" />
+    <meta name="description" content="探索石油钻机的各个组成部分">
+    <meta name="keywords" content="石油钻机, 钻井设备, 石油工业, 3D交互">
+    <meta name="author" content="nobi">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0F766E', // 石油绿
+                        secondary: '#F97316', // 橙色（代表能量）
+                        accent: '#0EA5E9', // 蓝色（代表技术）
+                        neutral: '#1F2937',
+                        'neutral-light': '#F3F4F6',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .image-map-container {
+                @apply relative w-full aspect-[3/4] md:aspect-[9/16] mx-auto overflow-hidden bg-gray-100;
+            }
+            .image-map {
+                @apply absolute inset-0 w-full h-full object-cover;
+            }
+            .map-area {
+                @apply absolute cursor-pointer transition-all duration-300 opacity-0 hover:opacity-30 active:opacity-50;
+            }
+            .map-area.active {
+                @apply opacity-50;
+            }
+            .area-label {
+                @apply absolute px-2 py-1 bg-white bg-opacity-90 text-neutral rounded-full shadow-md transform -translate-x-1/2 -translate-y-1/2 text-xs font-medium opacity-0 transition-opacity duration-300 pointer-events-none;
+            }
+            .area-label.active {
+                @apply opacity-100;
+            }
+            .control-panel {
+                @apply fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-10;
+            }
+            .control-btn {
+                @apply flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 hover:shadow-md;
+            }
+            .control-btn-primary {
+                @apply bg-primary text-white hover:bg-primary/90;
+            }
+            .control-btn-secondary {
+                @apply bg-neutral-light text-neutral hover:bg-gray-200;
+            }
+            .info-panel {
+                @apply fixed top-0 right-0 bottom-0 w-full md:w-80 bg-white shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto;
+            }
+            .info-panel.active {
+                @apply translate-x-0;
+            }
+            .info-header {
+                @apply flex justify-between items-center p-4 border-b;
+            }
+            .info-content {
+                @apply p-4 space-y-4;
+            }
+            .area-details {
+                @apply fixed bottom-0 left-0 right-0 bg-white rounded-t-xl shadow-lg p-4 transform translate-y-full transition-transform duration-300 ease-in-out z-20;
+            }
+            .area-details.active {
+                @apply translate-y-0;
+            }
+            .area-title {
+                @apply font-bold text-lg mb-2;
+            }
+            .area-description {
+                @apply text-sm text-gray-600 mb-3;
+            }
+            .close-btn {
+                @apply w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors;
+            }
+            .overlay {
+                @apply fixed inset-0 bg-black bg-opacity-50 z-10 opacity-0 pointer-events-none transition-opacity duration-300;
+            }
+            .overlay.active {
+                @apply opacity-100 pointer-events-auto;
+            }
+            .drawing-point {
+                @apply absolute w-3 h-3 bg-accent rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30;
+            }
+            .drawing-point-label {
+                @apply absolute -top-6 left-1/2 transform -translate-x-1/2 bg-accent text-white text-xs px-1 rounded whitespace-nowrap;
+            }
+            .drawing-area {
+                @apply absolute bg-accent/30 pointer-events-none z-20;
+            }
+            .coordinate-panel {
+                @apply fixed top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg text-sm z-50;
+            }
+            /* 移动设备专用样式 */
+            @media (max-width: 768px) {
+                .drawing-hint {
+                    @apply fixed top-20 left-1/2 transform -translate-x-1/2 bg-accent/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg z-50;
+                }
+                .area-details {
+                    @apply fixed bottom-0 left-0 right-0 bg-white rounded-t-xl shadow-lg p-3 transform translate-y-full transition-transform duration-300 ease-in-out z-20;
+                }
+                .area-title {
+                    @apply font-bold text-base mb-1;
+                }
+                .area-description {
+                    @apply text-xs text-gray-600 mb-2;
+                }
+                .info-panel {
+                    @apply fixed top-0 right-0 bottom-0 w-full bg-white shadow-lg z-20 transform translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto;
+                }
+                .mobile-drawing-tools {
+                    @apply fixed bottom-20 left-0 right-0 px-4 py-3 bg-white/90 backdrop-blur-sm shadow-lg z-30;
+                }
+                .desktop-drawing-tools {
+                    @apply hidden md:block;
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-neutral">
+    <!-- 页面头部 -->
+    <header class="sticky top-0 bg-white shadow-sm z-10">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="relative w-12 h-12 overflow-hidden rounded-lg shadow-md">
+                    <img src="http://www.xiongmengwan.com/picbox/3Dlogo2025.jpg" alt="石油钻机logo" class="w-full h-full object-cover">
+                </div>
+                <h1 class="text-xl font-bold text-primary">石油钻机 </h1>
+               <button id="menu-btn" class="text-neutral hover:text-primary transition-colors">
+                <i class="fa fa-bars text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 图片地图容器 -->
+    <div class="image-map-container">
+        <!-- 背景图片 -->
+        <img src="http://www.xiongmengwan.com/picbox/RIG.jpg" alt="石油钻机图片" class="image-map object-cover">
+        
+        <!-- 区域块 - 石油钻机各部分 -->
+        <div id="area-1" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(35.31% 47.37%, 44.76% 47.77%, 43.69% 6.31%, 34.42% 7.11%);" data-name="井架" data-url="https://example.com/jacket"></div>
+        <div id="area-2" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(45.11% 60.76%, 52.48% 63.25%, 56.81% 60.92%, 46.23% 55.67%);" data-name="绞车" data-url="https://example.com/winch"></div>
+        <div id="area-3" class="map-area bg-accent/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(35.27% 4.21%, 40.19% 5.41%, 43.82% 4.53%, 43.72% 0.76%, 34.95% 0.16%);" data-name="天车" data-url="https://example.com/crown-block"></div>
+        <div id="area-4" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(36.72% 49.09%, 37.30% 52.33%, 41.37% 53.10%, 41.37% 47.88%, 36.77% 47.24%);" data-name="游车" data-url="https://example.com/drawworks"></div>
+        <div id="area-5" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(35.97% 53.22%, 42.43% 53.70%, 42.60% 51.66%, 36.18% 51.58%);" data-name="大钩" data-url="https://example.com/hook"></div>
+        <div id="area-6" class="map-area bg-accent/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(35.86% 53.42%, 36.13% 55.34%, 38.48% 55.14%, 39.23% 58.99%, 40.30% 58.95%, 41.05% 55.91%, 41.63% 53.42%);" data-name="顶驱" data-url="https://example.com/swivel"></div>
+        <div id="area-7" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(35.97% 65.77%, 39.98% 67.37%, 42.43% 65.69%, 39.44% 64.89%);" data-name="转盘" data-url="https://example.com/rotary-table"></div>
+        <div id="area-8" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(28.33% 58.19%, 28.22% 59.84%, 29.13% 60.40%, 29.07% 61.08%, 33.88% 62.84%, 38.64% 61.72%, 38.32% 59.00%, 31.05% 55.91%);" data-name="司钻房" data-url="https://example.com/drill-pipe"></div>
+        <div id="area-9" class="map-area bg-accent/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(75.94% 57.95%, 86.85% 61.88%, 95.02% 56.15%, 84.12% 51.58%);" data-name="泥浆泵" data-url="https://example.com/mud-pump"></div>
+        <div id="area-10" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(42.27% 69.43%, 43.13% 82.22%, 49.44% 78.69%, 48.85% 77.17%, 45.64% 79.33%, 45.16% 69.15%);" data-name="泥浆循环系统" data-url="https://example.com/mud-system"></div>
+        <div id="area-11" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(6.31% 99.02%, 25.97% 85.95%, 20.58% 82.79%, 0.64% 94.21%);" data-name="动力猫道" data-url="https://example.com/well-control"></div>
+        <div id="area-12" class="map-area bg-accent/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(68.09% 30.51%, 82.20% 35.64%, 92.83% 31.67%, 92.99% 28.39%, 77.55% 23.98%);" data-name="动力系统" data-url="https://example.com/power-system"></div>
+        <div id="area-13" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(54.94% 36.84%, 70.76% 42.01%, 78.67% 37.53%, 78.67% 34.68%, 63.65% 29.99%, 56.28% 33.68%);" data-name="电控系统" data-url="https://example.com/electric-system"></div>
+        <div id="area-14" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(16.19% 80.01%, 31.91% 87.74%, 42.43% 81.53%, 41.95% 71.83%, 37.89% 69.67%, 38.85% 67.62%, 32.98% 65.78%, 28.06% 67.22%, 25.92% 65.94%);
+" data-name="底座" data-url="https://example.com/substructure"></div>
+        <div id="area-15" class="map-area bg-accent/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(0.37% 55.94%, 9.14% 51.69%, 8.28% 45.64%, 0.53% 42.51%);" data-name="bop远控房" data-url="https://example.com/living-quarters"></div>
+        <div id="area-16" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(54.94% 29.84%, 59.96% 31.20%, 64.88% 30.08%, 74.71% 25.71%, 65.90% 21.94%, 55.74% 27.40%);" data-name="油罐区" data-url="https://example.com/storage"></div>
+        <div id="area-17" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(51.63% 67.05%, 55.74% 68.09%, 61.83% 64.76%, 61.19% 61.96%, 58.04% 60.84%);" data-name="液压站" data-url="https://example.com/control-center"></div>
+        <div id="area-18" class="map-area bg-accent/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(37.95% 84.71%, 42.33% 86.27%, 44.73% 85.07%, 40.24% 81.30%);" data-name="倒绳机" data-url="https://example.com/crane"></div>
+        <div id="area-19" class="map-area bg-primary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(52.38% 85.18%, 56.86% 86.83%, 57.45% 75.92%, 54.62% 75.64%);" data-name="泥气分离器" data-url="https://example.com/mud-tanks"></div>
+        <div id="area-20" class="map-area bg-secondary/70" style="top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(57.40% 87.74%, 67.87% 91.95%, 88.29% 76.44%, 95.99% 78.85%, 98.93% 58.76%);" data-name="固控系统" data-url="https://example.com/mud-processing"></div>
+        
+        <!-- 区域标签容器 -->
+        <div id="labels-container" class="absolute inset-0 pointer-events-none"></div>
+
+    </div>
+
+
+    <!-- 区域详情面板 -->
+    <div id="area-details" class="area-details">
+        <div class="flex justify-between items-center mb-3">
+            <h3 id="details-title" class="area-title"></h3>
+            <button id="close-details" class="close-btn">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <p id="details-description" class="area-description"></p>
+        <a id="details-link" href="#" target="_blank" class="inline-block bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+            了解更多 <i class="fa fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+
+    <!-- 信息面板 -->
+    <div id="info-panel" class="info-panel">
+        <div class="info-header">
+            <h3 class="font-bold text-lg">使用说明</h3>
+            <button id="close-info" class="close-btn">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="info-content">
+            <div class="space-y-3">
+                <div class="flex items-start gap-2">
+                    <div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+                        <i class="fa fa-hand-pointer-o"></i>
+                    </div>
+                    <p class="text-sm">点击图片上的区域查看详细信息</p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div class="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center text-secondary flex-shrink-0">
+                        <i class="fa fa-mouse-pointer"></i>
+                    </div>
+                    <p class="text-sm">长按区域可以查看更详细的描述</p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                        <i class="fa fa-external-link"></i>
+                    </div>
+                    <p class="text-sm">点击"了解更多"按钮访问相关链接</p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                        <i class="fa fa-refresh"></i>
+                    </div>
+                    <p class="text-sm">点击底部重置按钮清除所有选择</p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                        <i class="fa fa-pencil"></i>
+                    </div>
+                    <p class="text-sm">使用绘图工具创建自定义区域并获取坐标</p>
+                </div>
+            </div>
+            
+
+        </div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <button id="reset-btn" class="control-btn control-btn-secondary">
+            <i class="fa fa-refresh"></i>
+            <span>重置</span>
+        </button>
+        <button id="info-btn-mobile" >
+        </button>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="py-4 px-4 text-center text-gray-500 text-xs mt-4">
+        <p>© 2021 石油钻机三维交互展示</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const areas = document.querySelectorAll('.map-area');
+            const labelsContainer = document.getElementById('labels-container');
+            const resetBtn = document.getElementById('reset-btn');
+            const infoBtn = document.getElementById('info-btn-mobile');
+            const menuBtn = document.getElementById('menu-btn');
+            const infoPanel = document.getElementById('info-panel');
+            const closeInfoBtn = document.getElementById('close-info');
+            const areaDetails = document.getElementById('area-details');
+            const detailsTitle = document.getElementById('details-title');
+            const detailsDescription = document.getElementById('details-description');
+            const detailsLink = document.getElementById('details-link');
+            const closeDetails = document.getElementById('close-details');
+            const overlay = document.getElementById('overlay');
+            const drawStartBtn = document.getElementById('draw-start-mobile');
+            const drawEndBtn = document.getElementById('draw-end-mobile');
+            const drawClearBtn = document.getElementById('draw-clear-mobile');
+            const drawStartDesktopBtn = document.getElementById('draw-start-desktop');
+            const drawEndDesktopBtn = document.getElementById('draw-end-desktop');
+            const drawClearDesktopBtn = document.getElementById('draw-clear-desktop');
+            const coordinatesOutput = document.getElementById('coordinates-output');
+            const copyBtn = document.getElementById('copy-btn');
+            const drawingHint = document.getElementById('drawing-hint');
+            const imageMapContainer = document.querySelector('.image-map-container');
+            const coordinateDisplay = document.getElementById('coordinate-display');
+            const mouseCoords = document.getElementById('mouse-coords');
+            const polygonPoints = document.getElementById('polygon-points');
+            
+            // 区域详细信息数据
+            const areaDetailsData = {
+                '井架': '井架是石油钻机的重要组成部分，提供支撑结构，用于悬挂和操作钻具。现代井架通常采用钢结构，具有足够的强度和稳定性，能够承受钻具的重量和钻探过程中的各种载荷。',
+                '绞车': '绞车是钻机的核心设备之一，主要用于提升和下放钻具。它通过钢丝绳系统与天车、游车配合，实现钻具的垂直运动。绞车通常由电机或柴油机驱动，具有多个档位以适应不同的工作需求。',
+                '天车': '天车位于井架顶部，是一组滑轮系统，与绞车和游车配合使用。它改变钢丝绳的方向，使绞车能够有效地提升和下放钻具。天车通常由多个滑轮组成，能够承受很大的拉力。',
+                '游车': '游车是一个可移动的滑轮系统，悬挂在井架内的钢丝绳上，与天车和绞车配合使用。它通过钢丝绳的收放实现上下移动，用于提升和下放钻具。游车的设计使其能够平稳地在井架内运行。',
+                '大钩': '大钩是悬挂在游车下方的重要部件，用于连接和悬挂钻具。它能够承受钻具的重量，并允许钻具在钻探过程中旋转。大钩通常具有安全锁扣装置，确保钻具连接牢固。',
+                '水龙头': '水龙头是连接旋转钻杆和泥浆循环系统的关键部件。它允许钻杆在旋转的同时，将泥浆从地面输送到井底。水龙头通常具有旋转密封装置，防止泥浆泄漏，并能够承受高压和高速旋转。',
+                '转盘': '转盘是钻机的旋转设备，位于钻台中心，用于驱动钻杆旋转。它通过齿轮传动系统将动力传递给钻杆，使钻杆能够在井底破碎岩石。转盘的转速和扭矩可以根据不同的钻探需求进行调整。',
+                '钻杆': '钻杆是连接地面设备和井底钻头的管道，通常由高强度合金钢制成。它不仅传递扭矩和旋转力，还作为泥浆循环的通道，将泥浆输送到井底并带回岩屑。钻杆通常由多根单根连接而成，随着井深的增加而逐步加长。',
+                '泥浆泵': '泥浆泵是钻井液循环系统的核心设备，用于将泥浆从泥浆池吸入，加压后通过钻杆输送到井底。泥浆在井底起到冷却钻头、携带岩屑、平衡地层压力等重要作用。泥浆泵通常具有较高的压力和流量能力。',
+                '泥浆循环系统': '泥浆循环系统是钻机的重要组成部分，包括泥浆泵、泥浆池、泥浆净化设备等。它的主要功能是将泥浆循环输送到井底，冷却钻头、携带岩屑返回地面，并对泥浆进行净化处理，使其能够再次循环使用。',
+                '井控设备': '井控设备是确保钻井安全的关键装置，包括防喷器、节流管汇、压井管汇等。它们的主要功能是在钻井过程中控制地层流体的涌出，防止井喷事故的发生。井控设备需要定期检查和维护，确保其可靠性。',
+                '动力系统': '动力系统为钻机提供动力，通常包括柴油机、发电机、电动机等设备。柴油机是最常用的动力源，能够提供较大的功率。发电机将机械能转换为电能，为钻机的电动设备提供电力。动力系统的设计需要考虑钻机的功率需求和工作环境。',
+                '电控系统': '电控系统是钻机的神经中枢，用于控制和监测钻机的各种设备和参数。它包括各种控制器、传感器、仪表等，能够实现自动化控制和数据采集。现代钻机的电控系统通常采用PLC或DCS控制系统，具有高度的可靠性和智能化水平。',
+                '底座': '底座是钻机的基础结构，支撑整个钻机的重量，并为各种设备提供安装平台。它通常由钢结构制成，具有足够的强度和稳定性。底座的设计需要考虑钻机的移动性和安装便利性，一些大型钻机的底座还具有升降功能，便于调整工作高度。',
+                '生活区': '生活区为钻井工作人员提供住宿、饮食和休息的场所。它通常包括宿舍、食堂、卫生间、娱乐室等设施，配备有空调、供暖、供水等系统，以满足工作人员的基本生活需求。生活区的设计注重舒适性和安全性，为工作人员提供良好的工作和生活环境。',
+                '储存区': '储存区用于存放钻井所需的各种物资和设备，包括钻杆、钻头、泥浆材料、工具等。它需要合理规划和管理，确保物资的安全存放和方便取用。储存区通常设有货架、仓库等设施，并配备有搬运设备，如起重机、叉车等。',
+                '控制中心': '控制中心是钻机的操作核心，操作人员在这里监控和控制钻机的各种设备和参数。它通常配备有先进的监控系统、自动化控制设备和通信设备，使操作人员能够实时了解钻机的工作状态，并及时做出调整和决策。控制中心的设计注重人机工程学，提高操作人员的工作效率和舒适度。',
+                '起重机': '起重机是钻机上的重要辅助设备，用于吊装和搬运各种物资和设备。它通常安装在钻机的特定位置，具有不同的起重量和工作半径，以满足不同的吊装需求。起重机的操作需要经过专业培训的人员进行，确保吊装作业的安全。',
+                '泥浆池': '泥浆池是储存和处理钻井液的场所，通常由多个池子组成，包括吸入池、循环池、沉淀池等。泥浆在泥浆池中进行沉淀、分离和处理，去除其中的岩屑和杂质，然后再次循环使用。泥浆池的设计需要考虑泥浆的容量、循环效率和环保要求。',
+                '钻井液处理系统': '钻井液处理系统用于对钻井液进行净化和处理，确保其性能符合钻井要求。它通常包括振动筛、除砂器、除泥器、离心机等设备，能够去除泥浆中的岩屑、砂粒和其他杂质。钻井液处理系统的工作效率直接影响钻井速度和质量。'
+            };
+            
+            // 存储所有创建的标签
+            const labels = new Map();
+            
+            // 绘图模式变量
+            let isDrawing = false;
+            let drawingPoints = [];
+            let drawingArea = null;
+            
+            // 为每个区域创建标签元素
+            areas.forEach(area => {
+                const name = area.getAttribute('data-name');
+                const url = area.getAttribute('data-url');
+                
+                // 创建标签元素
+                const label = document.createElement('div');
+                label.className = 'area-label';
+                label.textContent = name;
+                label.dataset.name = name;
+                
+                // 将标签添加到容器
+                labelsContainer.appendChild(label);
+                labels.set(name, label);
+                
+                // 设置标签位置
+                const rect = area.getBoundingClientRect();
+                const containerRect = document.querySelector('.image-map-container').getBoundingClientRect();
+                
+                const centerX = rect.left - containerRect.left + rect.width / 2;
+                const centerY = rect.top - containerRect.top + rect.height / 2;
+                
+                label.style.left = `${centerX}px`;
+                label.style.top = `${centerY}px`;
+                
+                // 区域点击事件
+                area.addEventListener('click', (e) => {
+                    if (isDrawing) return;
+                    
+                    e.stopPropagation();
+                    
+                    // 移除其他所有活跃状态
+                    areas.forEach(a => a.classList.remove('active'));
+                    labels.forEach(l => l.classList.remove('active'));
+                    
+                    // 添加当前活跃状态
+                    area.classList.add('active');
+                    labels.get(name).classList.add('active');
+                    
+                    // 更新区域详情面板
+                    detailsTitle.textContent = name;
+                    detailsDescription.textContent = areaDetailsData[name] || '这是石油钻机的一个组成部分。';
+                    detailsLink.href = url;
+                    
+                    // 显示区域详情面板和遮罩层
+                    areaDetails.classList.add('active');
+                    overlay.classList.add('active');
+                });
+            });
+            
+            // 点击地图背景重置所有选择
+            document.querySelector('.image-map-container').addEventListener('click', (e) => {
+                if (isDrawing) return;
+                
+                resetSelection();
+            });
+            
+            // 重置按钮事件
+            resetBtn.addEventListener('click', resetSelection);
+            
+            // 关闭详情面板
+            closeDetails.addEventListener('click', () => {
+                areaDetails.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            // 信息面板控制
+            infoBtn.addEventListener('click', () => {
+                infoPanel.classList.add('active');
+                overlay.classList.add('active');
+            });
+            
+            menuBtn.addEventListener('click', () => {
+                infoPanel.classList.add('active');
+                overlay.classList.add('active');
+            });
+            
+            closeInfoBtn.addEventListener('click', () => {
+                infoPanel.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            // 点击遮罩层关闭面板
+            overlay.addEventListener('click', () => {
+                areaDetails.classList.remove('active');
+                infoPanel.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            // 重置选择状态
+            function resetSelection() {
+                areas.forEach(a => a.classList.remove('active'));
+                labels.forEach(l => l.classList.remove('active'));
+                areaDetails.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+            
+            // 鼠标移动时更新坐标
+            imageMapContainer.addEventListener('mousemove', (e) => {
+                if (!isDrawing) return;
+                
+                const rect = imageMapContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                mouseCoords.textContent = `${Math.round(x)}, ${Math.round(y)}`;
+            });
+            
+            // 绘图功能 - 开始绘制
+            function startDrawing() {
+                if (isDrawing) return;
+                
+                isDrawing = true;
+                drawingPoints = [];
+                coordinatesOutput.value = '正在绘制...点击图片添加顶点，点击结束按钮完成';
+                drawingHint.classList.remove('hidden');
+                coordinateDisplay.classList.remove('hidden');
+                
+                // 禁用所有区域交互
+                areas.forEach(area => {
+                    area.style.pointerEvents = 'none';
+                });
+                
+                // 禁用移动设备按钮
+                drawStartBtn.disabled = true;
+                drawEndBtn.disabled = false;
+                
+                // 禁用桌面端按钮
+                drawStartDesktopBtn.disabled = true;
+                drawEndDesktopBtn.disabled = false;
+            }
+            
+            // 绘图功能 - 结束绘制
+            function endDrawing() {
+                if (!isDrawing) return;
+                
+                isDrawing = false;
+                drawingHint.classList.add('hidden');
+                coordinateDisplay.classList.add('hidden');
+                
+                // 启用所有区域交互
+                areas.forEach(area => {
+                    area.style.pointerEvents = 'auto';
+                });
+                
+                // 启用移动设备按钮
+                drawStartBtn.disabled = false;
+                drawEndBtn.disabled = true;
+                
+                // 启用桌面端按钮
+                drawStartDesktopBtn.disabled = false;
+                drawEndDesktopBtn.disabled = true;
+                
+                // 生成并显示坐标信息
+                if (drawingPoints.length >= 3) {
+                    const rect = imageMapContainer.getBoundingClientRect();
+                    const percentPoints = drawingPoints.map(point => {
+                        const xPercent = ((point.x / rect.width) * 100).toFixed(2);
+                        const yPercent = ((point.y / rect.height) * 100).toFixed(2);
+                        return `${xPercent}% ${yPercent}%`;
+                    });
+                    
+                    const clipPath = `polygon(${percentPoints.join(', ')})`;
+                    const style = `position: absolute; top: 0; left: 0; width: 100%; height: 100%; clip-path: ${clipPath};`;
+                    
+                    coordinatesOutput.value = `CSS Style:\n${style}\n\nClip-path:\n${clipPath}\n\nPoints:\n${percentPoints.join('\n')}`;
+                } else {
+                    coordinatesOutput.value = '至少需要3个点才能形成多边形';
+                    clearDrawing();
+                }
+            }
+            
+            // 绘图功能 - 清除
+            function clearDrawing() {
+                // 移除所有绘制点
+                document.querySelectorAll('.drawing-point').forEach(point => point.remove());
+                
+                // 移除绘制区域
+                if (drawingArea) {
+                    drawingArea.remove();
+                    drawingArea = null;
+                }
+                
+                drawingPoints = [];
+                polygonPoints.textContent = '0个点';
+                
+                if (!isDrawing) {
+                    coordinatesOutput.value = '';
+                }
+            }
+            
+            // 绘图功能 - 添加点
+            imageMapContainer.addEventListener('click', (e) => {
+                if (!isDrawing) return;
+                
+                e.stopPropagation();
+                
+                // 获取相对于容器的坐标
+                const rect = imageMapContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // 创建点标记
+                const point = document.createElement('div');
+                point.className = 'drawing-point';
+                point.style.left = `${x}px`;
+                point.style.top = `${y}px`;
+                
+                const label = document.createElement('div');
+                label.className = 'drawing-point-label';
+                label.textContent = drawingPoints.length + 1;
+                point.appendChild(label);
+                
+                imageMapContainer.appendChild(point);
+                drawingPoints.push({ x, y });
+                
+                // 更新顶点计数
+                polygonPoints.textContent = `${drawingPoints.length}个点`;
+                
+                // 更新绘制区域
+                updateDrawingArea();
+            });
+            
+            // 更新绘制的多边形区域
+            function updateDrawingArea() {
+                if (drawingPoints.length < 2) return;
+                
+                // 如果不存在，创建新的绘制区域
+                if (!drawingArea) {
+                    drawingArea = document.createElement('div');
+                    drawingArea.className = 'drawing-area';
+                    imageMapContainer.appendChild(drawingArea);
+                }
+                
+                // 生成多边形的clip-path
+                const clipPath = `polygon(${drawingPoints.map(p => `${p.x}px ${p.y}px`).join(', ')})`;
+                drawingArea.style.clipPath = clipPath;
+                drawingArea.style.width = '100%';
+                drawingArea.style.height = '100%';
+            }
+            
+            // 为所有按钮绑定事件
+            drawStartBtn.addEventListener('click', startDrawing);
+            drawEndBtn.addEventListener('click', endDrawing);
+            drawClearBtn.addEventListener('click', clearDrawing);
+            drawStartDesktopBtn.addEventListener('click', startDrawing);
+            drawEndDesktopBtn.addEventListener('click', endDrawing);
+            drawClearDesktopBtn.addEventListener('click', clearDrawing);
+            
+            // 复制坐标
+            copyBtn.addEventListener('click', () => {
+                if (coordinatesOutput.value) {
+                    coordinatesOutput.select();
+                    document.execCommand('copy');
+                    
+                    // 显示复制成功提示
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '已复制!';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>    
